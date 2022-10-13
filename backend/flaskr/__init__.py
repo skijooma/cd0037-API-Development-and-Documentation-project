@@ -1,25 +1,34 @@
-import os
-from flask import Flask, request, abort, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
-import random
+import json
 
-from models import setup_db, Question, Category
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from ..models import db, Category, Question
+
+from backend import models
 
 QUESTIONS_PER_PAGE = 10
+
 
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
-    setup_db(app)
+
+    with app.app_context():
+        models.setup_db(app)
 
     """
     @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     """
+    # cors = CORS(app, resources={r"*": {"origin": "*"}})
 
     """
     @TODO: Use the after_request decorator to set Access-Control-Allow
     """
+    # @app.after_request()
+    # def handle_cors(response):
+    #     req = request.referrer
+    #
+    #     return response
 
     """
     @TODO:
@@ -27,6 +36,14 @@ def create_app(test_config=None):
     for all available categories.
     """
 
+    @app.route("/categories", methods=['GET'])
+    def categories():
+        if request.method == "GET":
+            all_categories = db.session.query(Category).all()
+            formatted_categories = [category.format() for category in all_categories]
+            print("All categories", formatted_categories)
+
+        return jsonify(formatted_categories)
 
     """
     @TODO:
@@ -40,6 +57,34 @@ def create_app(test_config=None):
     ten questions per page and pagination at the bottom of the screen for three pages.
     Clicking on the page numbers should update the questions.
     """
+
+    @app.route("/questions", methods=['GET'])
+    def questions():
+        page_num = 1
+        items_per_page = 10
+
+        if request.method == "GET":
+            questions_total = db.session.query(Question).count()
+            print("Questions total => ", questions_total)
+
+            category_results = db.session.query(Category).all()
+            serialized_category_results = [category.format() for category in category_results]
+            print("All categories => ", serialized_category_results)
+
+            paginated_questions = db.session.query(Question).filter().paginate(page=page_num,
+                                                                               per_page=items_per_page)
+            serialized_paginated_questions = [question.format() for question in paginated_questions.items]
+            print("Serialized questions => ", serialized_paginated_questions)
+            formatted_paginated_questions = {
+                "questions": serialized_paginated_questions,
+                "totalQuestions": questions_total,
+                "categories": serialized_category_results,
+                "currentCategory": ""
+            }
+
+            print("Formatted paginated questions => ", formatted_paginated_questions)
+
+        return jsonify(formatted_paginated_questions)
 
     """
     @TODO:
@@ -99,4 +144,3 @@ def create_app(test_config=None):
     """
 
     return app
-

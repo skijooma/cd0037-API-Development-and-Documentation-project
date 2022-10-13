@@ -17,3 +17,7 @@ frontend/node_modules/
 # INTELLIJ IDEA settings #
 ##########################
 .idea
+
+# FRONTEND #
+##########################
+frontend/package-lock.json
