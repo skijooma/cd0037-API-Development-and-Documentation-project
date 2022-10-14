@@ -78,8 +78,9 @@ def create_app(test_config=None):
                                               paginated_questions.items]
             print("Serialized questions => ", serialized_paginated_questions)
             formatted_paginated_questions = {"questions": serialized_paginated_questions,
-                "totalQuestions": questions_total, "categories": serialized_category_results,
-                "currentCategory": ""}
+                                             "totalQuestions": questions_total,
+                                             "categories": serialized_category_results,
+                                             "currentCategory": ""}
 
             print("Formatted paginated questions => ", formatted_paginated_questions)
 
@@ -126,12 +127,8 @@ def create_app(test_config=None):
                 difficulty = 1
                 category = 3
 
-                question = Question(
-                    question=question_text,
-                    answer=answer,
-                    difficulty=difficulty,
-                    category=category
-                )
+                question = Question(question=question_text, answer=answer, difficulty=difficulty,
+                                    category=category)
 
                 print("Inside ***", question)
 
@@ -158,17 +155,23 @@ def create_app(test_config=None):
     only question that include that string within their question.
     Try using the word "title" to start.
     """
+
     @app.route("/questions/search", methods=['POST'])
     def search_questions():
 
         form = request.form
         # if "search_term" in form.keys():
-            # search_value = form['search_term']
+        # search_value = form['search_term']
         search_value = "Wha"
-        results = db.session.query(Question.id, Question.question).filter(
+        question_results = db.session.query(Question.id, Question.question, Question.answer,
+                                            Question.difficulty, Question.category).filter(
             Question.question.ilike("%" + search_value + "%")).all()
+        number_of_questions = db.session.query(Question).filter(
+            Question.question.ilike("%" + search_value + "%")).count()
 
-        results = [dict(result) for result in results]
+        question_results = [dict(question) for question in question_results]
+        results = {"questions": question_results, "totalQuestions": number_of_questions,
+                   "currentCategory": "Entertainment"}
         print("Search results => ", results)
 
         return jsonify(results)
