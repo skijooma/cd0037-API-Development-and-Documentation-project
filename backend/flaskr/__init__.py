@@ -94,6 +94,32 @@ def create_app(test_config=None):
     This removal will persist in the database and when you refresh the page.
     """
 
+    @app.route("/questions/<id>", methods=['DELETE'])
+    def delete_question(id):
+
+        id = 25
+        error = False
+
+        try:
+            if request.method == "DELETE":
+                question = db.session.query(Question).filter(Question.id == id).first()
+                formatted_question = question.format()
+
+                print("Question to be deleted: ", formatted_question)
+                if question is not None:
+                    question.delete()
+        except:
+            error = True
+            db.session.rollback()
+            print(sys.exc_info())
+        finally:
+            db.session.close()
+
+        if error:
+            abort(400)
+        else:
+            return ""
+
     """
     @TODO:
     Create an endpoint to POST a new question,
@@ -202,7 +228,8 @@ def create_app(test_config=None):
             print("Serialized questions => ", serialized_questions)
 
             formatted_questions = {"questions": serialized_questions,
-                                   "totalQuestions": questions_total, "currentCategory": category.type}
+                                   "totalQuestions": questions_total,
+                                   "currentCategory": category.type}
 
             print("Formatted questions => ", formatted_questions)
 
