@@ -185,6 +185,29 @@ def create_app(test_config=None):
     category to be shown.
     """
 
+    @app.route("/categories/<id>/questions", methods=['GET'])
+    def questions_by_category(id):
+
+        id = 5
+        if request.method == "GET":
+            questions = db.session.query(Question).filter(Question.id == id).all()
+            questions_total = db.session.query(Question).filter(Question.id == id).count()
+            category = db.session.query(Category).filter(Category.id == id).first()
+
+            print("Questions => ", questions)
+            print("Questions total => ", questions_total)
+            print("Category => ", category.type)
+
+            serialized_questions = [question.format() for question in questions]
+            print("Serialized questions => ", serialized_questions)
+
+            formatted_questions = {"questions": serialized_questions,
+                                   "totalQuestions": questions_total, "currentCategory": category.type}
+
+            print("Formatted questions => ", formatted_questions)
+
+        return jsonify(formatted_questions)
+
     """
     @TODO:
     Create a POST endpoint to get questions to play the quiz.
