@@ -1,6 +1,7 @@
 import json
+import sys
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
 from ..models import db, Category, Question
 
@@ -73,14 +74,12 @@ def create_app(test_config=None):
 
             paginated_questions = db.session.query(Question).filter().paginate(page=page_num,
                                                                                per_page=items_per_page)
-            serialized_paginated_questions = [question.format() for question in paginated_questions.items]
+            serialized_paginated_questions = [question.format() for question in
+                                              paginated_questions.items]
             print("Serialized questions => ", serialized_paginated_questions)
-            formatted_paginated_questions = {
-                "questions": serialized_paginated_questions,
-                "totalQuestions": questions_total,
-                "categories": serialized_category_results,
-                "currentCategory": ""
-            }
+            formatted_paginated_questions = {"questions": serialized_paginated_questions,
+                "totalQuestions": questions_total, "categories": serialized_category_results,
+                "currentCategory": ""}
 
             print("Formatted paginated questions => ", formatted_paginated_questions)
 
@@ -105,6 +104,50 @@ def create_app(test_config=None):
     of the questions list in the "List" tab.
     """
 
+    @app.route("/questions", methods=['POST'])
+    def create_questions():
+
+        error = False
+
+        if request.method == "POST":
+            # question_text = request.get_json()['question']
+            # answer = request.get_json()['answer']
+            # difficulty = request.get_json()['difficulty']
+            # category = request.get_json()['category']
+            #
+            # question_text = question_text
+            # answer = answer
+            # difficulty = difficulty
+            # category = category
+
+            try:
+                question_text = "Which club has won the most UEFA Champions League trophies?"
+                answer = "Arsenal"
+                difficulty = 1
+                category = 3
+
+                question = Question(
+                    question=question_text,
+                    answer=answer,
+                    difficulty=difficulty,
+                    category=category
+                )
+
+                print("Inside ***", question)
+
+                question.insert()
+            except:
+                error = True
+                db.session.rollback()
+                print(sys.exc_info())
+            finally:
+                db.session.close()
+
+            if error:
+                abort(400)
+            else:
+                return ""
+
     """
     @TODO:
     Create a POST endpoint to get questions based on a search term.
@@ -115,6 +158,7 @@ def create_app(test_config=None):
     only question that include that string within their question.
     Try using the word "title" to start.
     """
+
 
     """
     @TODO:
