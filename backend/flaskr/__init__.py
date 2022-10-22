@@ -60,8 +60,10 @@ def create_app(test_config=None):
     """
 
     @app.route("/questions", methods=['GET'])
-    def questions():
-        page_num = 1
+    def questions(page: int = 1):
+
+        print("/questions REQUEST => ", request)
+
         items_per_page = 10
 
         if request.method == "GET":
@@ -70,9 +72,10 @@ def create_app(test_config=None):
 
             category_results = db.session.query(Category).all()
             serialized_category_results = [category.format() for category in category_results]
+            serialized_category_results = dict((cat['id'], cat['type']) for cat in serialized_category_results) # Turn this list into a dictionary.
             print("All categories => ", serialized_category_results)
 
-            paginated_questions = db.session.query(Question).filter().paginate(page=page_num,
+            paginated_questions = db.session.query(Question).filter().paginate(page=page,
                                                                                per_page=items_per_page)
             serialized_paginated_questions = [question.format() for question in
                                               paginated_questions.items]
@@ -80,7 +83,9 @@ def create_app(test_config=None):
             formatted_paginated_questions = {"questions": serialized_paginated_questions,
                                              "totalQuestions": questions_total,
                                              "categories": serialized_category_results,
-                                             "currentCategory": ""}
+                                             "currentCategory": "History"}
+
+            # TODO: Find out what currentCategory really means.
 
             print("Formatted paginated questions => ", formatted_paginated_questions)
 
