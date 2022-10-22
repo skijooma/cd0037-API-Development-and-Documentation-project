@@ -1,5 +1,6 @@
 import $ from "jquery";
 import React, { useEffect, useState } from "react";
+import '../stylesheets/FormView.css';
 
 
 const FormView = () => {
@@ -12,10 +13,11 @@ const FormView = () => {
 
 	useEffect(() => {
 		$.ajax({
-			url: `/categories`, //TODO: update request URL
+			url: `/categories`,
 			type: 'GET',
 			success: (result) => {
-				setCategories(result.categories);
+
+				setCategories(result);
 
 				return;
 			},
@@ -24,7 +26,7 @@ const FormView = () => {
 				return;
 			},
 		});
-	});
+	}, []);
 
 	const submitQuestion = (event) => {
 
@@ -32,7 +34,6 @@ const FormView = () => {
 		$.ajax({
 			url: '/questions', //TODO: update request URL
 			type: 'POST',
-			dataType: 'json',
 			contentType: 'application/json',
 			data: JSON.stringify({
 				question: question,
@@ -45,11 +46,13 @@ const FormView = () => {
 			},
 			crossDomain: true,
 			success: (result) => {
+
 				document.getElementById('add-question-form').reset();
 
 				return;
 			},
-			error: (error) => {
+			error: (request, status, error) => {
+
 				alert('Unable to add question. Please try your request again');
 
 				return;

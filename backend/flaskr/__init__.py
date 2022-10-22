@@ -42,6 +42,8 @@ def create_app(test_config=None):
         if request.method == "GET":
             all_categories = db.session.query(Category).all()
             formatted_categories = [category.format() for category in all_categories]
+            formatted_categories = dict((cat['id'], cat['type']) for cat in
+                                        formatted_categories)  # Turn this list into a dictionary.
             print("All categories", formatted_categories)
 
         return jsonify(formatted_categories)
@@ -71,7 +73,8 @@ def create_app(test_config=None):
 
             category_results = db.session.query(Category).all()
             serialized_category_results = [category.format() for category in category_results]
-            serialized_category_results = dict((cat['id'], cat['type']) for cat in serialized_category_results) # Turn this list into a dictionary.
+            serialized_category_results = dict((cat['id'], cat['type']) for cat in
+                                               serialized_category_results)  # Turn this list into a dictionary.
             print("All categories => ", serialized_category_results)
 
             paginated_questions = db.session.query(Question).filter().paginate(page=page,
@@ -143,40 +146,34 @@ def create_app(test_config=None):
 
         error = False
 
-        if request.method == "POST":
-            # question_text = request.get_json()['question']
-            # answer = request.get_json()['answer']
-            # difficulty = request.get_json()['difficulty']
-            # category = request.get_json()['category']
-            #
-            # question_text = question_text
-            # answer = answer
-            # difficulty = difficulty
-            # category = category
+        question_text = request.get_json()['question']
+        answer = request.get_json()['answer']
+        difficulty = request.get_json()['difficulty']
+        category = request.get_json()['category']
 
-            try:
-                question_text = "Which club has won the most UEFA Champions League trophies?"
-                answer = "Arsenal"
-                difficulty = 1
-                category = 3
+        question_text = question_text
+        answer = answer
+        difficulty = difficulty
+        category = category
 
-                question = Question(question=question_text, answer=answer, difficulty=difficulty,
-                                    category=category)
+        try:
+            question = Question(question=question_text, answer=answer, difficulty=difficulty,
+                                category=category)
 
-                print("Inside ***", question)
+            print("Question for insertion => ", question)
 
-                question.insert()
-            except:
-                error = True
-                db.session.rollback()
-                print(sys.exc_info())
-            finally:
-                db.session.close()
+            question.insert()
+        except:
+            error = True
+            db.session.rollback()
+            print(sys.exc_info())
+        finally:
+            db.session.close()
 
-            if error:
-                abort(400)
-            else:
-                return ""
+        if error:
+            abort(400)
+        else:
+            return ""
 
     """
     @TODO:
