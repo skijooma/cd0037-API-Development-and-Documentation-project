@@ -192,10 +192,11 @@ def create_app(test_config=None):
     @app.route("/questions/search", methods=['POST'])
     def search_questions():
 
-        form = request.form
-        # if "search_term" in form.keys():
-        # search_value = form['search_term']
-        search_value = "Wha"
+        search_value = ""
+
+        if "searchTerm" in request.get_json():
+            search_value = request.get_json()['searchTerm']
+
         question_results = db.session.query(Question.id, Question.question, Question.answer,
                                             Question.difficulty, Question.category).filter(
             Question.question.ilike("%" + search_value + "%")).all()
