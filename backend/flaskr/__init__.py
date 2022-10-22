@@ -101,15 +101,18 @@ def create_app(test_config=None):
     @app.route("/questions/<id>", methods=['DELETE'])
     def delete_question(id):
 
-        id = 25
+        id = request.values.get('id')
+        print("Question ID: ", request.values.get('id'))
+
         error = False
 
         try:
             if request.method == "DELETE":
                 question = db.session.query(Question).filter(Question.id == id).first()
+                print("Question found: ", question)
                 formatted_question = question.format()
 
-                print("Question to be deleted: ", formatted_question)
+                print("Question formatted: ", formatted_question)
                 if question is not None:
                     question.delete()
         except:
