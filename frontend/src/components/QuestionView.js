@@ -15,12 +15,12 @@ const QuestionView = () => {
 
 	useEffect(() => {
 		getQuestions();
-	},[])
+	},[page])
 
 	const getQuestions = () => {
 
 		$.ajax({
-			url: `/questions?page=${1}`, //TODO: update request URL
+			url: `/questions?page=${page}`,
 			type: 'GET',
 			success: (result) => {
 				console.log("GET /questions => ", result)
@@ -40,6 +40,7 @@ const QuestionView = () => {
 	};
 
 	const selectPage = (num) => {
+		console.log("CLICK => ", num)
 		setPage(num);
 		getQuestions();
 	}
@@ -68,8 +69,11 @@ const QuestionView = () => {
 
 	const getByCategory = (id) => {
 		$.ajax({
-			url: `/categories/${id}/questions`, //TODO: update request URL
+			url: `/categories/${id}/questions`,
 			type: 'GET',
+			data: {
+				id: id
+			},
 			success: (result) => {
 
 				setQuestions(result.questions);

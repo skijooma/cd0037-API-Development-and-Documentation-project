@@ -62,8 +62,7 @@ def create_app(test_config=None):
     @app.route("/questions", methods=['GET'])
     def questions(page: int = 1):
 
-        print("/questions REQUEST => ", request)
-
+        page = int(request.args.get('page'))
         items_per_page = 10
 
         if request.method == "GET":
@@ -216,10 +215,11 @@ def create_app(test_config=None):
     category to be shown.
     """
 
-    @app.route("/categories/<id>/questions", methods=['GET'])
+    @app.route("/categories/<int:id>/questions", methods=['GET'])
     def questions_by_category(id):
 
-        id = 5
+        id = int(request.args.get('id'))
+
         if request.method == "GET":
             questions = db.session.query(Question).filter(Question.id == id).all()
             questions_total = db.session.query(Question).filter(Question.id == id).count()
