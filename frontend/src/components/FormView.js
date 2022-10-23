@@ -32,7 +32,7 @@ const FormView = () => {
 
 		event.preventDefault();
 		$.ajax({
-			url: '/questions', //TODO: update request URL
+			url: '/questions',
 			type: 'POST',
 			contentType: 'application/json',
 			data: JSON.stringify({
