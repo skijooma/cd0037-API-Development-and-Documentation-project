@@ -22,11 +22,13 @@ class QuizView extends Component {
 	}
 
 	componentDidMount() {
+		console.log("componentDidMount() ")
 		$.ajax({
 			url: `/categories`, //TODO: update request URL
 			type: 'GET',
 			success: (result) => {
-				this.setState({ categories: result.categories });
+				console.log("RESULTS HERE", result)
+				this.setState({ categories: result });
 				return;
 			},
 			error: (error) => {
@@ -45,15 +47,21 @@ class QuizView extends Component {
 	};
 
 	getNextQuestion = () => {
+		console.log("In getQuestions() ")
 		const previousQuestions = [...this.state.previousQuestions];
 		if (this.state.currentQuestion.id) {
 			previousQuestions.push(this.state.currentQuestion.id);
 		}
 
+		console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+		console.log("Current Question ", this.state.currentQuestion)
+		console.log("Previous Questions ", previousQuestions)
+		console.log("Quiz Category => ", this.state.quizCategory)
+		console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+
 		$.ajax({
 			url: '/quizzes', //TODO: update request URL
 			type: 'POST',
-			dataType: 'json',
 			contentType: 'application/json',
 			data: JSON.stringify({
 				previous_questions: previousQuestions,
@@ -64,13 +72,17 @@ class QuizView extends Component {
 			},
 			crossDomain: true,
 			success: (result) => {
+
+				console.log("<<<<<<<<< Quiz question => ", result)
 				this.setState({
 					showAnswer: false,
 					previousQuestions: previousQuestions,
-					currentQuestion: result.question,
+					currentQuestion: result,
 					guess: '',
 					forceEnd: result.question ? false : true,
 				});
+
+				console.log("^^^^^^^^^ Current question ?? => ", result.question)
 				return;
 			},
 			error: (error) => {
@@ -102,6 +114,7 @@ class QuizView extends Component {
 	};
 
 	renderPrePlay() {
+		console.log("renderPrePlay()")
 		return (
 			<div className = 'quiz-play-holder'>
 				<div className = 'choose-header'>Choose Category</div>
@@ -172,6 +185,7 @@ class QuizView extends Component {
 	}
 
 	renderPlay() {
+		console.log("renderPlay()")
 		return this.state.previousQuestions.length === questionsPerPlay ||
 		this.state.forceEnd ? (
 			this.renderFinalScore()

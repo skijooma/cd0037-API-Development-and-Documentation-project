@@ -15,12 +15,16 @@ const QuizView = () => {
 	const [guess, setGuess] = useState('');
 	const [forceEnd, setForceEnd] = useState(false);
 
-	useEffect(() =>{
+	useEffect(() => {
+
+		console.log("Mounting....")
+
 		$.ajax({
 			url: `/categories`, //TODO: update request URL
 			type: 'GET',
 			success: (result) => {
 
+				console.log("RESULTS HERE", result)
 				setCategories(result.categories)
 
 				return;
@@ -32,12 +36,17 @@ const QuizView = () => {
 		});
 	}, [])
 
+	// useEffect(() => {
+	// 	setPreviousQuestions([]);
+	// }, []);
+
 	useEffect(() => {
 		getNextQuestion()
 	}, [quizCategory])
 
 	const selectCategory = ({ type, id = 0 }) => {
-		setQuizCategory({type, id})
+		setQuizCategory({type, id});
+		getNextQuestion();
 	};
 
 	const handleChange = (event) => {
@@ -45,7 +54,7 @@ const QuizView = () => {
 	};
 
 	const getNextQuestion = () => {
-		const previousQuestions = [...previousQuestions];
+		const previousQuestions = previousQuestions !== undefined ? [...previousQuestions] : [];
 		if (currentQuestion.id) {
 			previousQuestions.push(currentQuestion.id);
 		}
@@ -53,7 +62,6 @@ const QuizView = () => {
 		$.ajax({
 			url: '/quizzes', //TODO: update request URL
 			type: 'POST',
-			dataType: 'json',
 			contentType: 'application/json',
 			data: JSON.stringify({
 				previous_questions: previousQuestions,
@@ -65,6 +73,7 @@ const QuizView = () => {
 			crossDomain: true,
 			success: (result) => {
 
+				console.log(">>>>>>>> Quiz question => ", result)
 				setShowAnswer(false);
 				setPreviousQuestions(previousQuestions);
 				setCurrentQuestion(result.question);
@@ -193,11 +202,13 @@ const QuizView = () => {
 		);
 	}
 
-	if (quizCategory) {
-		return (renderPlay)
-	} else {
-		return (renderPrePlay)
-	}
+	// if (quizCategory) {
+	// 	return (renderPlay)
+	// } else {
+	// 	return (renderPrePlay)
+
+
+		return quizCategory ? renderPlay() : renderPrePlay()
 }
 
 export default QuizView;

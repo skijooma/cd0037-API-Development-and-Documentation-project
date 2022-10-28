@@ -1,4 +1,5 @@
 import json
+import random
 import sys
 
 from flask import Flask, request, jsonify, abort
@@ -222,11 +223,11 @@ def create_app(test_config=None):
         id = int(request.args.get('id'))
 
         if request.method == "GET":
-            questions = db.session.query(Question).filter(Question.id == id).all()
+            questions = db.session.query(Question).filter(Question.category == id).all()
             questions_total = db.session.query(Question).filter(Question.id == id).count()
             category = db.session.query(Category).filter(Category.id == id).first()
 
-            print("Questions => ", questions)
+            print("Questions BY CAT=> ", questions)
             print("Questions total => ", questions_total)
             print("Category => ", category.type)
 
@@ -252,6 +253,54 @@ def create_app(test_config=None):
     one question at a time is displayed, the user is allowed to answer
     and shown whether they were correct or not.
     """
+
+    @app.route("/quizzes", methods=['POST'])
+    def get_quiz_question():
+
+        error = False
+
+        previous_questions = request.get_json()['previous_questions']
+        quiz_category = request.get_json()['quiz_category']
+        quiz_category = quiz_category['id']
+        print("Quiz req **********************", quiz_category)
+        random_question = {}
+
+        try:
+            category_questions = []
+            if int(quiz_category) == 0:
+                category_questions = db.session.query(Question).all()
+                print("Quiz request [0] **********************", category_questions)
+            else:
+                category_questions = db.session.query(Question).filter(
+                    Question.category == quiz_category).all()
+                print("Quiz request **********************", category_questions)
+
+            print("<<<<<<<< PRE. ", previous_questions, " = ", len(category_questions))
+            if len(previous_questions) > 0:  # Filtering out previous questions.
+                if len(category_questions) > 0:
+                    category_questions = [q for q in category_questions if q.id not in previous_questions]
+                    print("<<<<<<<< FILTERED. ", previous_questions, " = ", len(category_questions))
+
+            if len(category_questions) > 0:
+                random_position = random.randint(0, len(category_questions) - 1)
+                print("******* RANDOM POS => ", random_position, " [", len(category_questions),
+                      " [", category_questions[random_position])
+                random_question = category_questions[random_position]
+                random_question = random_question.format()
+                print("******* RANDOM QUESTION => ", random_question)
+
+            return random_question
+        except:
+            error = True
+            db.session.rollback()
+            print(sys.exc_info())
+        finally:
+            db.session.close()
+
+        if error:
+            abort(400)
+        else:
+            return ""
 
     """
     @TODO:
