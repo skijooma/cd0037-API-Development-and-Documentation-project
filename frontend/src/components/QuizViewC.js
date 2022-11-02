@@ -28,7 +28,7 @@ class QuizView extends Component {
 			type: 'GET',
 			success: (result) => {
 				console.log("RESULTS HERE", result)
-				this.setState({ categories: result });
+				this.setState({ categories: result.categories });
 				return;
 			},
 			error: (error) => {

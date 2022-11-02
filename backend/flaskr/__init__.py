@@ -4,9 +4,7 @@ import sys
 
 from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
-from ..models import db, Category, Question
-
-from backend import models
+from ..models import db, Category, Question, setup_db
 
 QUESTIONS_PER_PAGE = 10
 
@@ -16,7 +14,7 @@ def create_app(test_config=None):
     app = Flask(__name__)
 
     with app.app_context():
-        models.setup_db(app)
+        setup_db(app)
 
     """
     @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
@@ -40,14 +38,22 @@ def create_app(test_config=None):
 
     @app.route("/categories", methods=['GET'])
     def categories():
-        if request.method == "GET":
-            all_categories = db.session.query(Category).all()
-            formatted_categories = [category.format() for category in all_categories]
-            formatted_categories = dict((cat['id'], cat['type']) for cat in
-                                        formatted_categories)  # Turn this list into a dictionary.
-            print("All categories", formatted_categories)
 
-        return jsonify(formatted_categories)
+        all_categories = db.session.query(Category).all()
+
+        if len(all_categories) == 0:
+            abort(404)
+
+        formatted_categories = [category.format() for category in all_categories]
+        formatted_categories = dict((cat['id'], cat['type']) for cat in
+                                    formatted_categories)  # Turn this list into a dictionary.
+
+        print("All categories", formatted_categories)
+
+        return jsonify({
+            'success': True,
+            'categories': formatted_categories
+        })
 
     """
     @TODO:
@@ -114,9 +120,7 @@ def create_app(test_config=None):
             if request.method == "DELETE":
                 question = db.session.query(Question).filter(Question.id == id).first()
                 print("Question found: ", question)
-                formatted_question = question.format()
 
-                print("Question formatted: ", formatted_question)
                 if question is not None:
                     question.delete()
         except:
@@ -220,25 +224,36 @@ def create_app(test_config=None):
     @app.route("/categories/<int:id>/questions", methods=['GET'])
     def questions_by_category(id):
 
-        id = int(request.args.get('id'))
+        error = False
+        try:
+            id = int(request.args.get('id'))
 
-        if request.method == "GET":
-            questions = db.session.query(Question).filter(Question.category == id).all()
-            questions_total = db.session.query(Question).filter(Question.id == id).count()
-            category = db.session.query(Category).filter(Category.id == id).first()
+            if request.method == "GET":
+                questions = db.session.query(Question).filter(Question.category == id).all()
+                questions_total = db.session.query(Question).filter(Question.id == id).count()
+                category = db.session.query(Category).filter(Category.id == id).first()
 
-            print("Questions BY CAT=> ", questions)
-            print("Questions total => ", questions_total)
-            print("Category => ", category.type)
+                print("Questions BY CAT=> ", questions)
+                print("Questions total => ", questions_total)
+                print("Category => ", category.type)
 
-            serialized_questions = [question.format() for question in questions]
-            print("Serialized questions => ", serialized_questions)
+                serialized_questions = [question.format() for question in questions]
+                print("Serialized questions => ", serialized_questions)
 
-            formatted_questions = {"questions": serialized_questions,
-                                   "totalQuestions": questions_total,
-                                   "currentCategory": category.type}
+                formatted_questions = {"questions": serialized_questions,
+                                       "totalQuestions": questions_total,
+                                       "currentCategory": category.type}
 
-            print("Formatted questions => ", formatted_questions)
+                print("Formatted questions => ", formatted_questions)
+        except:
+            error = True
+            db.session.rollback()
+            print(sys.exc_info())
+
+        if error:
+            abort(500)
+        else:
+            return ""
 
         return jsonify(formatted_questions)
 
@@ -307,5 +322,39 @@ def create_app(test_config=None):
     Create error handlers for all expected errors
     including 404 and 422.
     """
+    @app.errorhandler(400)
+    def not_found(error):
+        return jsonify({
+            "success": False,
+            "error": 400,
+            "message": "Bad request"
+        }), 400
+
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({
+            "success": False,
+            "error": 404,
+            "message": "Resource not found"
+        }), 404
+
+    @app.errorhandler(422)
+    def not_found(error):
+        return jsonify({
+            "success": False,
+            "error": 422,
+            "message": "Unprocessable entity"
+        }), 422
+
+    @app.errorhandler(500)
+    def not_found(error):
+        return jsonify({
+            "success": False,
+            "error": 500,
+            "message": "Internal server error"
+        }), 500
+
+
+
 
     return app

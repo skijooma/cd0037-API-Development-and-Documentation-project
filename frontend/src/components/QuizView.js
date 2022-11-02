@@ -24,7 +24,7 @@ const QuizView = () => {
 			type: 'GET',
 			success: (result) => {
 
-				console.log("RESULTS HERE", result)
+				console.log("RESULTS HERE", result.categories)
 				setCategories(result.categories)
 
 				return;
