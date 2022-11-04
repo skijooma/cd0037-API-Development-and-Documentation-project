@@ -1,9 +1,8 @@
-import json
 import random
 import sys
 
 from flask import Flask, request, jsonify, abort
-from flask_cors import CORS
+
 from ..models import db, Category, Question, setup_db
 
 QUESTIONS_PER_PAGE = 10
@@ -50,10 +49,7 @@ def create_app(test_config=None):
 
         print("All categories", formatted_categories)
 
-        return jsonify({
-            'success': True,
-            'categories': formatted_categories
-        })
+        return jsonify({'success': True, 'categories': formatted_categories})
 
     """
     @TODO:
@@ -71,34 +67,27 @@ def create_app(test_config=None):
     @app.route("/questions", methods=['GET'])
     def questions(page: int = 1):
 
+        if request.args.get('page') is None:
+            abort(500)
+
         page = int(request.args.get('page'))
         items_per_page = 10
 
-        if request.method == "GET":
-            questions_total = db.session.query(Question).count()
-            print("Questions total => ", questions_total)
+        questions_total = db.session.query(Question).count()
+        category_results = db.session.query(Category).all()
+        serialized_category_results = [category.format() for category in category_results]
+        serialized_category_results = dict((cat['id'], cat['type']) for cat in
+                                           serialized_category_results)  # Turn this list into a dictionary.
+        paginated_questions = db.session.query(Question).filter().paginate(page=page,
+                                                                           per_page=items_per_page)
+        serialized_paginated_questions = [question.format() for question in
+                                          paginated_questions.items]
 
-            category_results = db.session.query(Category).all()
-            serialized_category_results = [category.format() for category in category_results]
-            serialized_category_results = dict((cat['id'], cat['type']) for cat in
-                                               serialized_category_results)  # Turn this list into a dictionary.
-            print("All categories => ", serialized_category_results)
+        # TODO: Find out what currentCategory really means.
 
-            paginated_questions = db.session.query(Question).filter().paginate(page=page,
-                                                                               per_page=items_per_page)
-            serialized_paginated_questions = [question.format() for question in
-                                              paginated_questions.items]
-            print("Serialized questions => ", serialized_paginated_questions)
-            formatted_paginated_questions = {"questions": serialized_paginated_questions,
-                                             "totalQuestions": questions_total,
-                                             "categories": serialized_category_results,
-                                             "currentCategory": "History"}
-
-            # TODO: Find out what currentCategory really means.
-
-            print("Formatted paginated questions => ", formatted_paginated_questions)
-
-        return jsonify(formatted_paginated_questions)
+        return jsonify({'success': True, 'questions': serialized_paginated_questions,
+                        'totalQuestions': questions_total,
+                        'categories': serialized_category_results, 'currentCategory': 'History'})
 
     """
     @TODO:
@@ -108,32 +97,27 @@ def create_app(test_config=None):
     This removal will persist in the database and when you refresh the page.
     """
 
-    @app.route("/questions/<id>", methods=['DELETE'])
+    @app.route("/questions/<int:id>", methods=['DELETE'])
     def delete_question(id):
 
-        id = request.values.get('id')
-        print("Question ID: ", request.values.get('id'))
-
-        error = False
+        print("Question ID: ", id)
 
         try:
-            if request.method == "DELETE":
-                question = db.session.query(Question).filter(Question.id == id).first()
-                print("Question found: ", question)
+            question = db.session.query(Question).filter(Question.id == id).first()
+            print("Question found: ", question)
 
-                if question is not None:
-                    question.delete()
+            if question is None:
+                abort(404)
+
+            question.delete()
+
+            return jsonify({'success': True, 'deleted': id})
         except:
-            error = True
             db.session.rollback()
             print(sys.exc_info())
+            abort(422)
         finally:
             db.session.close()
-
-        if error:
-            abort(400)
-        else:
-            return ""
 
     """
     @TODO:
@@ -149,8 +133,6 @@ def create_app(test_config=None):
     @app.route("/questions", methods=['POST'])
     def create_questions():
 
-        error = False
-
         question_text = request.get_json()['question']
         answer = request.get_json()['answer']
         difficulty = request.get_json()['difficulty']
@@ -164,21 +146,22 @@ def create_app(test_config=None):
         try:
             question = Question(question=question_text, answer=answer, difficulty=difficulty,
                                 category=category)
-
             print("Question for insertion => ", question)
-
             question.insert()
+
+            question_count = db.session.query(Question).count()
+            all_questions = db.session.query(Question).all()
+            all_questions = [question.format() for question in
+                             all_questions]  # formatted questions.
+
+            return jsonify({'success': True, 'created': question.id, 'questions': all_questions,
+                            'question_count': question_count})
         except:
-            error = True
+            abort(422)
             db.session.rollback()
             print(sys.exc_info())
         finally:
             db.session.close()
-
-        if error:
-            abort(400)
-        else:
-            return ""
 
     """
     @TODO:
@@ -194,23 +177,34 @@ def create_app(test_config=None):
     @app.route("/questions/search", methods=['POST'])
     def search_questions():
 
-        search_value = ""
+        try:
+            search_value = ""
 
-        if "searchTerm" in request.get_json():
-            search_value = request.get_json()['searchTerm']
+            if "searchTerm" in request.get_json():
+                search_value = request.get_json()['searchTerm']
 
-        question_results = db.session.query(Question.id, Question.question, Question.answer,
-                                            Question.difficulty, Question.category).filter(
-            Question.question.ilike("%" + search_value + "%")).all()
-        number_of_questions = db.session.query(Question).filter(
-            Question.question.ilike("%" + search_value + "%")).count()
+            number_of_questions = db.session.query(Question).filter(
+                Question.question.ilike("%" + search_value + "%")).count()
+            question_results = db.session.query(Question.id, Question.question, Question.answer,
+                                                Question.difficulty, Question.category).filter(
+                Question.question.ilike("%" + search_value + "%")).all()
+            question_results = [dict(question) for question in question_results]
 
-        question_results = [dict(question) for question in question_results]
-        results = {"questions": question_results, "totalQuestions": number_of_questions,
-                   "currentCategory": "Entertainment"}
-        print("Search results => ", results)
+            results = {"questions": question_results, "totalQuestions": number_of_questions,
+                       "currentCategory": "Entertainment"}
 
-        return jsonify(results)
+            print("Search results => ", {'success': True, 'questions': question_results,
+                                         'totalQuestions': number_of_questions,
+                                         'currentCategory': "History"})
+
+            return jsonify({'success': True, 'questions': question_results,
+                            'totalQuestions': number_of_questions, 'currentCategory': "History"})
+        except:
+            abort(500)
+            db.session.rollback()
+            print(sys.exc_info())
+        finally:
+            db.session.close()
 
     """
     @TODO:
@@ -224,38 +218,35 @@ def create_app(test_config=None):
     @app.route("/categories/<int:id>/questions", methods=['GET'])
     def questions_by_category(id):
 
-        error = False
+        id = int(request.args.get('id'))
+
         try:
-            id = int(request.args.get('id'))
+            category = db.session.query(Category).filter(Category.id == id).first()
 
-            if request.method == "GET":
-                questions = db.session.query(Question).filter(Question.category == id).all()
-                questions_total = db.session.query(Question).filter(Question.id == id).count()
-                category = db.session.query(Category).filter(Category.id == id).first()
+            if category is None:
+                abort(500)
 
-                print("Questions BY CAT=> ", questions)
-                print("Questions total => ", questions_total)
-                print("Category => ", category.type)
+            questions = db.session.query(Question).filter(Question.category == id).all()
+            questions_total = db.session.query(Question).filter(Question.id == id).count()
 
-                serialized_questions = [question.format() for question in questions]
-                print("Serialized questions => ", serialized_questions)
+            print("Questions BY CAT=> ", questions)
+            print("Questions total => ", questions_total)
+            print("Category => ", category.type)
 
-                formatted_questions = {"questions": serialized_questions,
-                                       "totalQuestions": questions_total,
-                                       "currentCategory": category.type}
+            serialized_questions = [question.format() for question in questions]
+            print("Serialized questions => ", serialized_questions)
 
-                print("Formatted questions => ", formatted_questions)
+            print("Formatted questions => ", {'success': True, "questions": serialized_questions,
+                                              "totalQuestions": questions_total,
+                                              "currentCategory": category.type})
+
+            return jsonify({'success': True, "questions": serialized_questions,
+                            "totalQuestions": questions_total,
+                            "currentCategory": category.type})
         except:
-            error = True
+            abort(500)
             db.session.rollback()
             print(sys.exc_info())
-
-        if error:
-            abort(500)
-        else:
-            return ""
-
-        return jsonify(formatted_questions)
 
     """
     @TODO:
@@ -272,12 +263,11 @@ def create_app(test_config=None):
     @app.route("/quizzes", methods=['POST'])
     def get_quiz_question():
 
-        error = False
-
         previous_questions = request.get_json()['previous_questions']
         quiz_category = request.get_json()['quiz_category']
-        quiz_category = quiz_category['id']
         print("Quiz req **********************", quiz_category)
+        quiz_category = quiz_category['id']
+
         random_question = {}
 
         try:
@@ -293,68 +283,52 @@ def create_app(test_config=None):
             print("<<<<<<<< PRE. ", previous_questions, " = ", len(category_questions))
             if len(previous_questions) > 0:  # Filtering out previous questions.
                 if len(category_questions) > 0:
-                    category_questions = [q for q in category_questions if q.id not in previous_questions]
+                    category_questions = [q for q in category_questions if
+                                          q.id not in previous_questions]
                     print("<<<<<<<< FILTERED. ", previous_questions, " = ", len(category_questions))
 
-            if len(category_questions) > 0:
-                random_position = random.randint(0, len(category_questions) - 1)
-                print("******* RANDOM POS => ", random_position, " [", len(category_questions),
-                      " [", category_questions[random_position])
-                random_question = category_questions[random_position]
-                random_question = random_question.format()
-                print("******* RANDOM QUESTION => ", random_question)
+            if len(category_questions) == 0:
+                abort(500)
 
-            return random_question
+            random_position = random.randint(0, len(category_questions) - 1)
+            print("******* RANDOM POS => ", random_position, " [", len(category_questions),
+                  " [", category_questions[random_position])
+            random_question = category_questions[random_position]
+            random_question = random_question.format()
+            print("******* RANDOM QUESTION => ", random_question)
+
+            return jsonify({'success': True, "question": random_question})
         except:
-            error = True
+            abort(500)
             db.session.rollback()
             print(sys.exc_info())
         finally:
             db.session.close()
-
-        if error:
-            abort(400)
-        else:
-            return ""
 
     """
     @TODO:
     Create error handlers for all expected errors
     including 404 and 422.
     """
+
     @app.errorhandler(400)
     def not_found(error):
-        return jsonify({
-            "success": False,
-            "error": 400,
-            "message": "Bad request"
-        }), 400
+        return jsonify({"success": False, "error": 400, "message": "Bad request"}), 400
 
     @app.errorhandler(404)
     def not_found(error):
-        return jsonify({
-            "success": False,
-            "error": 404,
-            "message": "Resource not found"
-        }), 404
+        return jsonify({"success": False, "error": 404, "message": "Resource not found"}), 404
+
+    @app.errorhandler(405)
+    def not_found(error):
+        return jsonify({"success": False, "error": 405, "message": "Method not allowed"}), 405
 
     @app.errorhandler(422)
     def not_found(error):
-        return jsonify({
-            "success": False,
-            "error": 422,
-            "message": "Unprocessable entity"
-        }), 422
+        return jsonify({"success": False, "error": 422, "message": "Unprocessable entity"}), 422
 
     @app.errorhandler(500)
     def not_found(error):
-        return jsonify({
-            "success": False,
-            "error": 500,
-            "message": "Internal server error"
-        }), 500
-
-
-
+        return jsonify({"success": False, "error": 500, "message": "Internal server error"}), 500
 
     return app

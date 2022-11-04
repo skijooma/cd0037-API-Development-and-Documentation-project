@@ -77,7 +77,7 @@ class QuizView extends Component {
 				this.setState({
 					showAnswer: false,
 					previousQuestions: previousQuestions,
-					currentQuestion: result,
+					currentQuestion: result.question,
 					guess: '',
 					forceEnd: result.question ? false : true,
 				});

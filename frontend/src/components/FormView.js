@@ -17,7 +17,7 @@ const FormView = () => {
 			type: 'GET',
 			success: (result) => {
 
-				setCategories(result);
+				setCategories(result.categories);
 
 				return;
 			},
