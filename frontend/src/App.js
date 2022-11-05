@@ -4,7 +4,7 @@ import './stylesheets/App.css';
 import FormView from "./components/FormView";
 import Header from "./components/Header";
 import QuestionView from "./components/QuestionView";
-import QuizView from "./components/QuizViewC";
+import QuizView from "./components/QuizView";
 
 
 const App = () => {
