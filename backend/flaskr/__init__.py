@@ -2,6 +2,7 @@ import random
 import sys
 
 from flask import Flask, request, jsonify, abort
+from flask_cors import CORS
 
 from ..models import db, Category, Question, setup_db
 
@@ -16,18 +17,19 @@ def create_app(test_config=None):
         setup_db(app)
 
     """
-    @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
+    Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     """
-    # cors = CORS(app, resources={r"*": {"origin": "*"}})
+    cors = CORS(app, resources={r"*": {"origin": "*"}})
 
     """
-    @TODO: Use the after_request decorator to set Access-Control-Allow
+    Use the after_request decorator to set Access-Control-Allow
     """
-    # @app.after_request()
-    # def handle_cors(response):
-    #     req = request.referrer
-    #
-    #     return response
+
+    @app.after_request
+    def handle_cors(response):
+        req = request.referrer
+
+        return response
 
     """
     An endpoint to handle GET requests
