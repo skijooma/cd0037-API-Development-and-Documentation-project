@@ -15,8 +15,8 @@ class TriviaTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client
         self.database_name = "trivia_test"
-        self.database_path = "postgresql://{}/{}".format('postgres:postgres@localhost:5432',
-                                                         self.database_name)
+        self.database_path = "postgresql://{}/{}".format(
+            'postgres:postgres@localhost:5432', self.database_name)
 
         # binds the app to the current context
         with self.app.app_context():
@@ -26,8 +26,9 @@ class TriviaTestCase(unittest.TestCase):
             # create all tables
             self.db.create_all()
 
-        self.new_question = Question(question="What was Twitter’s original name", answer="twttr",
-                                     difficulty=2, category=1)  # For new question creation
+        self.new_question = Question(
+            question="What was Twitter’s original name", answer="twttr",
+            difficulty=2, category=1)  # For new question creation
 
         self.searchTerm = {"searchTerm": "Clay"}  # For POST /questions/search.
 
@@ -52,7 +53,8 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)  # Status code is 200.
         self.assertEqual(data['success'], True)  # Response success.
-        self.assertEqual(len(data['categories']), 6)  # Must be 6 categories returned.
+        self.assertEqual(len(data['categories']),
+                         6)  # Must be 6 categories returned.
 
     """ 
     FAILURE - Test that a call to /cats resolves to a not found response status 
@@ -72,7 +74,8 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)  # Status code is 200.
         self.assertEqual(data['success'], True)  # Response success.
-        self.assertEqual(len(data['questions']), 10)  # Must be 10 paginated questions returned.
+        self.assertEqual(len(data['questions']),
+                         10)  # Must be 10 paginated questions returned.
 
     """
     FAILURE - Test that a call to /questions without a page parameter resolves to a server error.
@@ -96,7 +99,8 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)  # Response success code.  #
         self.assertEqual(data['success'], True)  # Response success.
         self.assertEqual(data['deleted'], 10)  # Response success.
-        self.assertEqual(question, None)  # Deleted question should not be found if queried.
+        self.assertEqual(question,
+                         None)  # Deleted question should not be found if queried.
 
     """
     FAILURE - Test that a call to /questions/<id> without a page parameter resolves to a server error.
@@ -127,10 +131,12 @@ class TriviaTestCase(unittest.TestCase):
     """
 
     def test_405_invalid_question_creation(self):
-        res = self.client().post('/questions/100', json=self.new_question.format())
+        res = self.client().post('/questions/100',
+                                 json=self.new_question.format())
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 405)  # Method not allowed status code.
+        self.assertEqual(res.status_code,
+                         405)  # Method not allowed status code.
         self.assertEqual(data['success'], False)
         self.assertTrue(data['message'], "Method not allowed")
 
@@ -146,9 +152,10 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)  # Response success.
         self.assertEqual(data['success'], True)
-        self.assertEqual(data['totalQuestions'], 1)  # Number of questions in results returned.
-        self.assertTrue(
-            self.searchTerm['searchTerm'] in question_text)  # Text in question matches search term.
+        self.assertEqual(data['totalQuestions'],
+                         1)  # Number of questions in results returned.
+        self.assertTrue(self.searchTerm[
+                            'searchTerm'] in question_text)  # Text in question matches search term.
 
     """
     FAILURE - Test that a call to POST /questions/search with no search term resolves to failure. 
@@ -158,7 +165,8 @@ class TriviaTestCase(unittest.TestCase):
         res = self.client().post('/questions/search', json=None)
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 500)  # Internal server error status code.
+        self.assertEqual(res.status_code,
+                         500)  # Internal server error status code.
         self.assertEqual(data['success'], False)
         self.assertTrue(data['message'], "Internal server error")
 
@@ -172,7 +180,8 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)  # Response success.
         self.assertEqual(data['success'], True)
-        self.assertEqual(len(data['questions']), 3)  # 3 questions in category Entertainment.
+        self.assertEqual(len(data['questions']),
+                         3)  # 3 questions in category Entertainment.
 
     """
     FAILURE - Test that a call to GET /categories/50/questions fails with a server error. 
@@ -182,7 +191,8 @@ class TriviaTestCase(unittest.TestCase):
         res = self.client().get('/categories/50/questions?id=50')
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 500)  # Internal server error status code.
+        self.assertEqual(res.status_code,
+                         500)  # Internal server error status code.
         self.assertEqual(data['success'], False)
         self.assertTrue(data['message'], "Internal server error")
 
@@ -191,11 +201,14 @@ class TriviaTestCase(unittest.TestCase):
     """
 
     def test_get_quiz_question(self):
-        res = self.client().post('/quizzes', json={"previous_questions": self.previous_questions,
-                                                   "quiz_category": self.quiz_category})
+        res = self.client().post('/quizzes', json={
+            "previous_questions": self.previous_questions,
+            "quiz_category": self.quiz_category
+        })
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 200)  # Response with success status code.
+        self.assertEqual(res.status_code,
+                         200)  # Response with success status code.
         self.assertEqual(data['success'], True)
         self.assertEqual(data['question']['category'], 5)
 
@@ -204,12 +217,17 @@ class TriviaTestCase(unittest.TestCase):
     """
 
     def test_405_questions_request_with_invalid_category(self):
-        self.quiz_category = {'type': 'Entertainment', 'id': 100}  # Category with invalid ID.
-        res = self.client().post('/quizzes', json={"previous_questions": self.previous_questions,
-                                                   "quiz_category": self.quiz_category})
+        self.quiz_category = {
+            'type': 'Entertainment', 'id': 100
+        }  # Category with invalid ID.
+        res = self.client().post('/quizzes', json={
+            "previous_questions": self.previous_questions,
+            "quiz_category": self.quiz_category
+        })
         data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 500)  # Internal server error status code.
+        self.assertEqual(res.status_code,
+                         500)  # Internal server error status code.
         self.assertEqual(data['success'], False)
         self.assertTrue(data['message'], "Internal server error")
 

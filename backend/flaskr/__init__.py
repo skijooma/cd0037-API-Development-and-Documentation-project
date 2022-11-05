@@ -44,7 +44,8 @@ def create_app(test_config=None):
         if len(all_categories) == 0:
             abort(404)
 
-        formatted_categories = [category.format() for category in all_categories]
+        formatted_categories = [category.format() for category in
+                                all_categories]
         formatted_categories = dict((cat['id'], cat['type']) for cat in
                                     formatted_categories)  # Turn this list into a dictionary.
 
@@ -66,18 +67,22 @@ def create_app(test_config=None):
 
         questions_total = db.session.query(Question).count()
         category_results = db.session.query(Category).all()
-        serialized_category_results = [category.format() for category in category_results]
+        serialized_category_results = [category.format() for category in
+                                       category_results]
         serialized_category_results = dict((cat['id'], cat['type']) for cat in
                                            serialized_category_results)  # Turn this list into a
         # dictionary.
-        paginated_questions = db.session.query(Question).filter().paginate(page=page,
-                                                                           per_page=items_per_page)
+        paginated_questions = db.session.query(Question).filter().paginate(
+            page=page, per_page=items_per_page)
         serialized_paginated_questions = [question.format() for question in
                                           paginated_questions.items]
 
-        return jsonify({'success': True, 'questions': serialized_paginated_questions,
-                        'totalQuestions': questions_total,
-                        'categories': serialized_category_results, 'currentCategory': 'History'})
+        return jsonify({
+            'success': True, 'questions': serialized_paginated_questions,
+            'totalQuestions': questions_total,
+            'categories': serialized_category_results,
+            'currentCategory': 'History'
+        })
 
     """
     An endpoint to DELETE question using a question ID.
@@ -87,7 +92,8 @@ def create_app(test_config=None):
     def delete_question(id):
 
         try:
-            question = db.session.query(Question).filter(Question.id == id).first()
+            question = db.session.query(Question).filter(
+                Question.id == id).first()
             if question is None:
                 abort(404)
             question.delete()
@@ -120,8 +126,8 @@ def create_app(test_config=None):
         category = category
 
         try:
-            question = Question(question=question_text, answer=answer, difficulty=difficulty,
-                                category=category)
+            question = Question(question=question_text, answer=answer,
+                                difficulty=difficulty, category=category)
             question.insert()
             question_count = db.session.query(Question).count()
             all_questions = db.session.query(Question).all()
@@ -153,13 +159,19 @@ def create_app(test_config=None):
 
             number_of_questions = db.session.query(Question).filter(
                 Question.question.ilike("%" + search_value + "%")).count()
-            question_results = db.session.query(Question.id, Question.question, Question.answer,
-                                                Question.difficulty, Question.category).filter(
+            question_results = db.session.query(Question.id, Question.question,
+                                                Question.answer,
+                                                Question.difficulty,
+                                                Question.category).filter(
                 Question.question.ilike("%" + search_value + "%")).all()
-            question_results = [dict(question) for question in question_results]
+            question_results = [dict(question) for question in
+                                question_results]
 
-            return jsonify({'success': True, 'questions': question_results,
-                            'totalQuestions': number_of_questions, 'currentCategory': "History"})
+            return jsonify({
+                'success': True, 'questions': question_results,
+                'totalQuestions': number_of_questions,
+                'currentCategory': "History"
+            })
         except:
             abort(500)
             db.session.rollback()
@@ -177,17 +189,24 @@ def create_app(test_config=None):
         id = int(request.args.get('id'))
 
         try:
-            category = db.session.query(Category).filter(Category.id == id).first()
+            category = db.session.query(Category).filter(
+                Category.id == id).first()
 
             if category is None:
                 abort(500)
 
-            questions = db.session.query(Question).filter(Question.category == id).all()
-            questions_total = db.session.query(Question).filter(Question.id == id).count()
-            serialized_questions = [question.format() for question in questions]
+            questions = db.session.query(Question).filter(
+                Question.category == id).all()
+            questions_total = db.session.query(Question).filter(
+                Question.id == id).count()
+            serialized_questions = [question.format() for question in
+                                    questions]
 
-            return jsonify({'success': True, "questions": serialized_questions,
-                            "totalQuestions": questions_total, "currentCategory": category.type})
+            return jsonify({
+                'success': True, "questions": serialized_questions,
+                "totalQuestions": questions_total,
+                "currentCategory": category.type
+            })
         except:
             abort(500)
             db.session.rollback()
@@ -244,22 +263,31 @@ def create_app(test_config=None):
 
     @app.errorhandler(400)
     def not_found(error):
-        return jsonify({"success": False, "error": 400, "message": "Bad request"}), 400
+        return jsonify(
+            {"success": False, "error": 400, "message": "Bad request"}), 400
 
     @app.errorhandler(404)
     def not_found(error):
-        return jsonify({"success": False, "error": 404, "message": "Resource not found"}), 404
+        return jsonify({
+            "success": False, "error": 404, "message": "Resource not found"
+        }), 404
 
     @app.errorhandler(405)
     def not_found(error):
-        return jsonify({"success": False, "error": 405, "message": "Method not allowed"}), 405
+        return jsonify({
+            "success": False, "error": 405, "message": "Method not allowed"
+        }), 405
 
     @app.errorhandler(422)
     def not_found(error):
-        return jsonify({"success": False, "error": 422, "message": "Unprocessable entity"}), 422
+        return jsonify({
+            "success": False, "error": 422, "message": "Unprocessable entity"
+        }), 422
 
     @app.errorhandler(500)
     def not_found(error):
-        return jsonify({"success": False, "error": 500, "message": "Internal server error"}), 500
+        return jsonify({
+            "success": False, "error": 500, "message": "Internal server error"
+        }), 500
 
     return app

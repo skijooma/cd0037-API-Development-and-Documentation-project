@@ -2,7 +2,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, String, Integer
 
 database_name = 'trivia'
-database_path = 'postgresql://{}/{}'.format('postgres:postgres@localhost:5432', database_name)
+database_path = 'postgresql://{}/{}'.format('postgres:postgres@localhost:5432',
+                                            database_name)
 
 db = SQLAlchemy()
 
@@ -53,8 +54,10 @@ class Question(db.Model):
         db.session.commit()
 
     def format(self):
-        return {'id': self.id, 'question': self.question, 'answer': self.answer,
-                'category': self.category, 'difficulty': self.difficulty}
+        return {
+            'id': self.id, 'question': self.question, 'answer': self.answer,
+            'category': self.category, 'difficulty': self.difficulty
+        }
 
 
 """

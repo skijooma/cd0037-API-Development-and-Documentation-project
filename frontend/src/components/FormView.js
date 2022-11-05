@@ -68,45 +68,45 @@ const FormView = () => {
 	};
 
 	return (
-		<div id='add-form'>
+		<div id = 'add-form'>
 			<h2>Add a New Trivia Question</h2>
 			<form
-				className='form-view'
-				id='add-question-form'
-				onSubmit={submitQuestion}
+				className = 'form-view'
+				id = 'add-question-form'
+				onSubmit = {submitQuestion}
 			>
 				<label>
 					Question
-					<input type='text' name='question' onChange={handleChange} />
+					<input type = 'text' name = 'question' onChange = {handleChange}/>
 				</label>
 				<label>
 					Answer
-					<input type='text' name='answer' onChange={handleChange} />
+					<input type = 'text' name = 'answer' onChange = {handleChange}/>
 				</label>
 				<label>
 					Difficulty
-					<select name='difficulty' onChange={handleChange}>
-						<option value='1'>1</option>
-						<option value='2'>2</option>
-						<option value='3'>3</option>
-						<option value='4'>4</option>
-						<option value='5'>5</option>
+					<select name = 'difficulty' onChange = {handleChange}>
+						<option value = '1'>1</option>
+						<option value = '2'>2</option>
+						<option value = '3'>3</option>
+						<option value = '4'>4</option>
+						<option value = '5'>5</option>
 					</select>
 				</label>
 				<label>
 					Category
-					<select name='category' onChange={handleChange}>
+					<select name = 'category' onChange = {handleChange}>
 						{Object.keys(categories).map((id) => {
 
 							return (
-								<option key={id} value={id}>
+								<option key = {id} value = {id}>
 									{categories[id]}
 								</option>
 							);
 						})}
 					</select>
 				</label>
-				<input type='submit' className='button' value='Submit' />
+				<input type = 'submit' className = 'button' value = 'Submit'/>
 			</form>
 		</div>
 	);

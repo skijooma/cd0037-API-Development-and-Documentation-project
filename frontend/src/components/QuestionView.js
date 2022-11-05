@@ -15,7 +15,7 @@ const QuestionView = () => {
 
 	useEffect(() => {
 		getQuestions();
-	},[page])
+	}, [page])
 
 	const getQuestions = () => {
 
@@ -53,8 +53,8 @@ const QuestionView = () => {
 			pageNumbers.push(
 				<span
 					key = {i}
-					className = { `page-num ${i === page ? 'active' : ''}`}
-					onClick = { () => {
+					className = {`page-num ${i === page ? 'active' : ''}`}
+					onClick = {() => {
 						selectPage(i);
 					}}
 				>
