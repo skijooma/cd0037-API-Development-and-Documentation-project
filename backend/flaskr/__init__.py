@@ -242,7 +242,7 @@ def create_app(test_config=None):
                                           q.id not in previous_questions]
 
             if len(category_questions) == 0:
-                abort(500)
+                return jsonify({'success': True, "question": None})
 
             random_position = random.randint(0, len(category_questions) - 1)
             random_question = category_questions[random_position]

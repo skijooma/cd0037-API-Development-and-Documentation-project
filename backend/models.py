@@ -1,9 +1,20 @@
+import os
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, String, Integer
 
+# Set environment variables
+os.environ['DB_USER'] = 'postgres'
+os.environ['DB_PASSWORD'] = 'postgres'
+
+# Get environment variables
+db_user = os.getenv('DB_USER')
+db_password = os.environ.get('DB_PASSWORD')
+
 database_name = 'trivia'
-database_path = 'postgresql://{}/{}'.format('postgres:postgres@localhost:5432',
-                                            database_name)
+database_path = 'postgresql://{}:{}{}/{}'.format(db_user, db_password,
+                                                 '@localhost:5432',
+                                                 database_name)
 
 db = SQLAlchemy()
 
